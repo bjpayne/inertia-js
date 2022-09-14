@@ -1,6 +1,8 @@
 <?php
 
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,7 +14,34 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
+require __DIR__.'/auth.php';
 
 Route::get('/', function () {
-    return view('welcome');
+    $data = [
+        'canLogin'       => Route::has('login'),
+        'canRegister'    => Route::has('register'),
+        'laravelVersion' => Application::VERSION,
+        'phpVersion'     => PHP_VERSION,
+    ];
+
+    return Inertia::render('Welcome', $data);
+});
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', function () {
+        $data = [
+            'agentId'   => 1,
+            'agentName' => 'Ben Payne',
+        ];
+
+        return Inertia::render('Dashboard', $data);
+    })->name('dashboard');
+
+    Route::get('/recordings', function () {
+        $recordings = \App\Models\Recordings::all()
+            ->values()
+            ->toArray();
+
+        return Inertia::render('Recordings', compact('recordings'));
+    })->name('recordings');
 });
